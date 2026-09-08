@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<!-- Author: Onkar N Ojha -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplication Quiz</title>
+    <style>
+        :root {
+            --bg1: #4f46e5;
+            --bg2: #7c3aed;
+            --card: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --good: #16a34a;
+            --bad: #dc2626;
+            --accent: #4f46e5;
+            --border: #e5e7eb;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg1), var(--bg2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--text);
+        }
+        .card {
+            background: var(--card);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+            width: 100%;
+            max-width: 480px;
+            padding: 32px;
+        }
+        h1 {
+            margin: 0 0 4px;
+            font-size: 26px;
+            text-align: center;
+        }
+        .subtitle {
+            text-align: center;
+            color: var(--muted);
+            margin: 0 0 24px;
+            font-size: 14px;
+        }
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+/* Setup screen */
+.field { margin-bottom: 18px; }
+.field label {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 2px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+.chip.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+select, input[type="number"] {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  font-size: 15px;
+  background: #fff;
+  color: var(--text);
+}
+.row { display: flex; gap: 12px; }
+.row > * { flex: 1; }
+
+button.primary {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: transform 0.1s ease, background 0.1s ease;
+}
+button.primary:hover { background: #4338ca; }
+button.primary:active { transform: scale(0.98); }
+button.secondary {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+/* Quiz screen */
+.quiz-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.progress-bar {
+  height: 8px;
+  background: #eef2f6;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 26px;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  width: 0%;
+  transition: width 0.25s ease;
+}
+.question {
+  text-align: center;
+  font-size: 42px;
+  font-weight: 800;
+  margin: 20px 0 28px;
+  letter-spacing: 1px;
+}
+#answerInput {
+  width: 100%;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  padding: 14px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  margin-bottom: 14px;
+}
+#answerInput.correct { border-color: var(--good); background: #f0fdf4; }
+#answerInput.wrong { border-color: var(--bad); background: #fef2f2; }
+.feedback {
+  text-align: center;
+  font-weight: 700;
+  min-height: 24px;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+.feedback.good { color: var(--good); }
+.feedback.bad { color: var(--bad); }
+
+/* Results screen */
+.score-big {
+  text-align: center;
+  font-size: 52px;
+  font-weight: 800;
+  margin: 10px 0 4px;
+  color: var(--accent);
+}
+.score-sub {
+  text-align: center;
+  color: var(--muted);
+  margin-bottom: 20px;
+  font-size: 15px;
+}
+.review-list {
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 16px 0;
+  border-top: 1px solid var(--border);
+}
+.review-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.review-item .mark.good { color: var(--good); font-weight: 700; }
+.review-item .mark.bad { color: var(--bad); font-weight: 700; }
+.stars { text-align: center; font-size: 30px; margin-bottom: 6px; }
+.footer-credit {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top:18px;
+  }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+
+    <!-- SETUP SCREEN -->
+    <div class="screen active" id="setupScreen">
+      <h1>Multiplication Quiz</h1>
+      <p class="subtitle">Pick your tables and get quizzing!</p>
+
+      <div class="field">
+        <label>Which times tables?</label>
+        <div class="chip-group" id="tableChips"></div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Number of questions</label>
+          <select id="numQuestions">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Time per question</label>
+          <select id="timeLimit">
+            <option value="0">No limit</option>
+            <option value="4">4 sec</option>
+            <option value="10" selected>10 sec</option>
+            <option value="15">15 sec</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="primary" id="startBtn">Start Quiz</button>
+    </div>
+
+    <!-- QUIZ SCREEN -->
+    <div class="screen" id="quizScreen">
+      <div class="quiz-top">
+        <span id="qCounter">Question 1/10</span>
+        <span id="qScore">Score: 0</span>
+        <span id="qTimer"></span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+      <div class="question" id="questionText">? x ? = ?</div>
+      <input type="number" id="answerInput" placeholder="Your answer" inputmode="numeric" autocomplete="off">
+      <div class="feedback" id="feedback"></div>
+      <button class="primary" id="submitBtn">Submit</button>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div class="screen" id="resultsScreen">
+      <div class="stars" id="stars"></div>
+      <h1>Quiz Complete!</h1>
+      <div class="score-big" id="finalScore">0/10</div>
+      <div class="score-sub" id="finalMsg">Great job!</div>
+      <div class="review-list" id="reviewList"></div>
+      <button class="primary" id="retryBtn">Try Again</button>
+      <button class="secondary" id="newSetupBtn">Change Settings</button>
+    </div>
+  <div class="footer-credit">Created by Onkar N Ojha</div>
+  </div>
+
+  <script>
+  (function () {
+    const setupScreen = document.getElementById('setupScreen');
+    const quizScreen = document.getElementById('quizScreen');
+    const resultsScreen = document.getElementById('resultsScreen');
+
+    const tableChips = document.getElementById('tableChips');
+    const startBtn = document.getElementById('startBtn');
+    const numQuestionsSel = document.getElementById('numQuestions');
+    const timeLimitSel = document.getElementById('timeLimit');
+
+    const qCounter = document.getElementById('qCounter');
+    const qScore = document.getElementById('qScore');
+    const qTimer = document.getElementById('qTimer');
+    const progressFill = document.getElementById('progressFill');
+    const questionText = document.getElementById('questionText');
+    const answerInput = document.getElementById('answerInput');
+    const feedback = document.getElementById('feedback');
+    const submitBtn = document.getElementById('submitBtn');
+
+    const finalScore = document.getElementById('finalScore');
+    const finalMsg = document.getElementById('finalMsg');
+    const reviewList = document.getElementById('reviewList');
+    const starsEl = document.getElementById('stars');
+    const retryBtn = document.getElementById('retryBtn');
+    const newSetupBtn = document.getElementById('newSetupBtn');
+
+    // Build table chips 2-20
+    const selectedTables = new Set([2, 3, 4, 5]);
+    for (let i = 2; i <= 20; i++) {
+        const chip = document.createElement('div');
+        chip.className = 'chip' + (selectedTables.has(i) ? ' selected' : '');
+        chip.textContent = i;
+        chip.dataset.value = i;
+        chip.addEventListener('click', () => {
+            if (selectedTables.has(i)) {
+                selectedTables.delete(i);
+                chip.classList.remove('selected');
+            } else {
+                selectedTables.add(i);
+                chip.classList.add('selected');
+            }
+        });
+        tableChips.appendChild(chip);
+    }
+
+    let questions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let results = [];
+    let timeLimit = 0;
+    let timerInterval = null;
+    let timeLeft = 0;
+    let answered = false;
+    let autoAdvanceTimer = null;
+    const AUTO_ADVANCE_MS = 4000;
+
+    function showScreen(screen) {
+        [setupScreen, quizScreen, resultsScreen].forEach(s => s.classList.remove('active'));
+        screen.classList.add('active');
+    }
+
+    function randint(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function generateQuestions(tables, count) {
+        const list = [];
+        const tablesArr = Array.from(tables);
+        for (let i = 0; i < count; i++) {
+            const a = tablesArr[randint(0, tablesArr.length - 1)];
+            const b = randint(1, 12);
+            list.push({ a, b, answer: a * b });
+        }
+        return list;
+    }
+
+    startBtn.addEventListener('click', () => {
+        if (selectedTables.size === 0) {
+            alert('Please select at least one times table.');
+            return;
+        }
+        const count = parseInt(numQuestionsSel.value, 10);
+        timeLimit = parseInt(timeLimitSel.value, 10);
+        questions = generateQuestions(selectedTables, count);
+        currentIndex = 0;
+        score = 0;
+        results = [];
+        showScreen(quizScreen);
+        renderQuestion();
+    });
+
+    function renderQuestion() {
+        answered = false;
+        const q = questions[currentIndex];
+        qCounter.textContent = `Question ${currentIndex + 1}/${questions.length}`;
+        qScore.textContent = `Score: ${score}`;
+        progressFill.style.width = `${(currentIndex / questions.length) * 100}%`;
+        questionText.textContent = `${q.a} x ${q.b} = ?`;
+        answerInput.value = '';
+        answerInput.className = '';
+        feedback.textContent = '';
+        feedback.className = 'feedback';
+        submitBtn.textContent = 'Submit';
+        answerInput.focus();
+
+        clearInterval(timerInterval);
+        clearTimeout(autoAdvanceTimer);
+        if (timeLimit > 0) {
+            timeLeft = timeLimit;
+            qTimer.textContent = `⏱️ ${timeLeft}s`;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                qTimer.textContent = `⏱️ ${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleAnswer(true); // timeout = treated as submit, likely wrong
+                }
+            }, 1000);
+        } else {
+            qTimer.textContent = '';
+        }
+    }
+
+    function handleAnswer(timedOut) {
+        if (answered) {
+            // Already graded -> Enter/click again skips the wait and advances now
+            clearTimeout(autoAdvanceTimer);
+            nextQuestion();
+            return;
+        }
+        answered = true;
+        clearInterval(timerInterval);
+        const q = questions[currentIndex];
+        const userAnswer = answerInput.value.trim();
+        const numericAnswer = parseInt(userAnswer, 10);
+        const isCorrect = !timedOut && userAnswer !== '' && numericAnswer === q.answer;
+
+        results.push({
+            question: `${q.a} x ${q.b}`,
+            correctAnswer: q.answer,
+            userAnswer: timedOut ? '(no answer)' : (userAnswer === '' ? '(blank)' : userAnswer),
+            isCorrect
+        });
+
+        if (isCorrect) {
+            score++;
+            answerInput.className = 'correct';
+            feedback.textContent = 'Correct! 🎉';
+            feedback.className = 'feedback good';
+        } else {
+            answerInput.className = 'wrong';
+            feedback.textContent = timedOut ? `Time's up! Answer: ${q.answer}` : `Not quite. Answer: ${q.answer}`;
+            feedback.className = 'feedback bad';
+        }
+        qScore.textContent = `Score: ${score}`;
+        submitBtn.textContent = currentIndex === questions.length - 1 ? 'See Results' : 'Next';
+
+        clearTimeout(autoAdvanceTimer);
+        autoAdvanceTimer = setTimeout(nextQuestion, AUTO_ADVANCE_MS);
+    }
+
+    function nextQuestion() {
+        clearTimeout(autoAdvanceTimer);
+        currentIndex++;
+        if (currentIndex >= questions.length) {
+            showResults();
+        } else {
+            renderQuestion();
+        }
+    }
+
+    submitBtn.addEventListener('click', () => handleAnswer(false));
+    answerInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleAnswer(false);
+        }
+    });
+
+    function showResults() {
+        clearInterval(timerInterval);
+        showScreen(resultsScreen);
+        const total = questions.length;
+        finalScore.textContent = `${score}/${total}`;
+        const pct = total === 0 ? 0 : score / total;
+
+        let stars = 1;
+        if (pct >= 0.9) stars = 5;
+        else if (pct >= 0.75) stars = 4;
+        else if (pct >= 0.5) stars = 3;
+        else if (pct >= 0.25) stars = 2;
+        starsEl.textContent = '⭐'.repeat(stars) + '☆'.repeat(5 - stars);
+
+        let msg;
+        if (pct === 1) msg = 'Perfect score! You\'re a multiplication master!';
+        else if (pct >= 0.75) msg = 'Great job! Keep practicing to master them all.';
+        else if (pct >= 0.5) msg = 'Good effort! A bit more practice will help.';
+        else msg = 'Keep practicing - you\'ll get there!';
+        finalMsg.textContent = msg;
+
+        reviewList.innerHTML = '';
+        results.forEach(r => {
+            const item = document.createElement('div');
+            item.className = 'review-item';
+            item.innerHTML = `
+                <span>${r.question} = ${r.correctAnswer}</span>
+                <span class="mark ${r.isCorrect ? 'good' : 'bad'}">
+                    ${r.isCorrect ? '✓ ' + r.userAnswer : '✗ ' + r.userAnswer}
+                </span>`;
+            reviewList.appendChild(item);
+        });
+    }
+
+    retryBtn.addEventListener('click', () => {
+        currentIndex = 0;
+        score = 0;
+        results = [];
+        questions = generateQuestions(selectedTables, questions.length);
+        showScreen(quizScreen);
+        renderQuestion();
+    });
+
+    newSetupBtn.addEventListener('click', () => {
+        showScreen(setupScreen);
+    });
+  })();
+  </script>
+
+</body>
+</html>
